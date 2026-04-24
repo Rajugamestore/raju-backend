@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RAJU GAME STORE</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(180deg, #081229, #0e2f92, #53a5ff);
+      color: white;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      padding: 30px 15px;
+    }
+
+    h1 {
+      font-size: 42px;
+      margin-bottom: 5px;
+    }
+
+    .subtitle {
+      color: #dbeaff;
+      margin-bottom: 25px;
+    }
+
+    .games {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .game-card {
+      background: rgba(0,0,0,0.25);
+      border-radius: 15px;
+      padding: 10px;
+      transition: 0.3s;
+    }
+
+    .game-card:hover {
+      transform: scale(1.05);
+    }
+
+    .game-card img {
+      width: 100%;
+      height: 160px;
+      border-radius: 10px;
+      object-fit: cover;
+    }
+
+    .section {
+      background: rgba(0,0,0,0.2);
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .price-list p {
+      margin: 6px 0;
+      font-weight: bold;
+    }
+
+    .order-box {
+      margin-top: 15px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    input, select, button {
+      height: 45px;
+      border-radius: 8px;
+      border: none;
+      padding: 0 10px;
+    }
+
+    input, select {
+      min-width: 200px;
+    }
+
+    button {
+      background: #00e0ff;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #00bcd4;
+    }
+
+    .result-box {
+      margin-top: 15px;
+      background: rgba(0,0,0,0.3);
+      padding: 12px;
+      border-radius: 10px;
+      font-family: monospace;
+      display: none;
+    }
+
+    .loading {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+  <h1>RAJU GAME STORE</h1>
+  <p class="subtitle">Top Up Game Murah & Cepat ⚡</p>
+
+  <!-- GAME LIST -->
+  <div class="games">
+    <div class="game-card">
+      <img src="ff.jpg">
+      <h3>FREE FIRE</h3>
+    </div>
+
+    <div class="game-card">
+      <img src="ml.jpg">
+      <h3>MOBILE LEGENDS</h3>
+    </div>
+  </div>
+
+  <!-- FREE FIRE -->
+  <div class="section">
+    <h2>FREE FIRE</h2>
+
+    <div class="price-list">
+      <p>12 💎 — 1.913</p>
+      <p>50 💎 — 6.750</p>
+      <p>70 💎 — 9.425</p>
+      <p>100 💎 — 15.500</p>
+    </div>
+
+    <div class="order-box">
+      <input type="text" id="ff_id" placeholder="Masukkan ID FF">
+      <select id="ff_sku">
+        <option value="ff12">12 Diamond</option>
+        <option value="ff50">50 Diamond</option>
+        <option value="ff70">70 Diamond</option>
+        <option value="ff100">100 Diamond</option>
+      </select>
+      <button onclick="orderFF()">BELI</button>
+    </div>
+  </div>
+
+  <!-- MOBILE LEGENDS -->
+  <div class="section">
+    <h2>MOBILE LEGENDS</h2>
+
+    <div class="price-list">
+      <p>10 💎 — 2.853</p>
+      <p>12 💎 — 3.347</p>
+      <p>150 💎 — 38.517</p>
+      <p>220 💎 — 56.263</p>
+    </div>
+
+    <div class="order-box">
+      <input type="text" id="ml_id" placeholder="12345678(1234)">
+      <select id="ml_sku">
+        <option value="ML10">10 Diamond</option>
+        <option value="ML12">12 Diamond</option>
+        <option value="ML150">150 Diamond</option>
+        <option value="ML220">220 Diamond</option>
+      </select>
+      <button onclick="orderML()">BELI</button>
+    </div>
+  </div>
+
+  <div id="resultBox" class="result-box"></div>
+</div>
+
+<script>
+const API_URL = "/order";
+
+function showResult(msg, error=false) {
+  const box = document.getElementById("resultBox");
+  box.style.display = "block";
+  box.style.color = error ? "#ff8080" : "#90ee90";
+  box.textContent = msg;
+}
+
+async function sendOrder(customer_no, buyer_sku_code) {
+  document.body.classList.add("loading");
+
+  try {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({customer_no, buyer_sku_code})
+    });
+
+    const data = await res.json();
+
+    if (!data.success) throw new Error(data.message);
+
+    showResult("✅ Order berhasil!\nInvoice: " + data.data.invoice_id);
+  } catch (err) {
+    showResult("❌ " + err.message, true);
+  }
+
+  document.body.classList.remove("loading");
+}
+
+function orderFF() {
+  const id = document.getElementById("ff_id").value.trim();
+  const sku = document.getElementById("ff_sku").value;
+
+  if (!id) return showResult("Masukkan ID FF!", true);
+  sendOrder(id, sku);
+}
+
+function orderML() {
+  const id = document.getElementById("ml_id").value.trim();
+  const sku = document.getElementById("ml_sku").value;
+
+  if (!id) return showResult("Masukkan ID ML!", true);
+  sendOrder(id, sku);
+}
+</script>
+
+</body>
+</html>
